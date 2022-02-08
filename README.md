@@ -24,7 +24,6 @@ These attributes can also be set in the tool directly, by passing them as comman
 
 ## Roadmap
 
-- [ ] Ignore commented lines (at the moment comments will cause re-compilation)
 - [ ] Add support for command line args as well as config file (`jexe.json`)
   - [ ] Pass path to config file as argument, default value is root
 - [ ] Create executable
