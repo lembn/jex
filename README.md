@@ -22,7 +22,7 @@ Build configuration can be customised by creating a `jexe.json` file in the root
 
 ## TODO
 
-- [] Ignore commented lines (at the moment comments will cause re-compilation)
-- [] Create executable
-- [] Create repo
-- [] Create release
+- [ ] Ignore commented lines (at the moment comments will cause re-compilation)
+- [ ] Create executable
+- [ ] Create repo
+- [ ] Create release
