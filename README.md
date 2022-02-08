@@ -20,7 +20,7 @@ Build configuration can be customised by creating a `jexe.json` file in the root
 - `sources` is the path of the lowest directory containing all of the source code.
 - `entry` is the Java FQN of the entry point file.
 
-## TODO
+## Roadmap
 
 - [ ] Ignore commented lines (at the moment comments will cause re-compilation)
 - [ ] Create executable
