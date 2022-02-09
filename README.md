@@ -27,6 +27,7 @@ These attributes can also be set in the tool directly, by passing them as comman
 - [ ] Add support for command line args as well as config file (`jexe.json`)
   - [ ] Pass path to config file as argument, default value is root
 - [ ] Better logging
+  - [ ] Use `click.echo()` instead of `print()`
   - [ ] Format
   - [ ] Log to file
 - [ ] Handle errors
