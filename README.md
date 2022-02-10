@@ -24,6 +24,5 @@ These attributes can also be set in the tool directly, by passing them as comman
 
 ## Roadmap
 
-- [ ] Change lisence
 - [ ] Create executable
   - [ ] Create release
