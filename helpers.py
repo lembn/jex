@@ -7,6 +7,8 @@ import click
 conv: Callable[[str], str] = lambda x: x.replace("\\", "/")
 join: Callable[[str, str], str] = lambda x, y: conv(os.path.join(x, y))
 
+silent = False
+
 
 def hash_file(filename: str):
     BUF_SIZE = 65536  # 64Kb
@@ -20,8 +22,14 @@ def hash_file(filename: str):
     return md5.hexdigest()
 
 
+def time() -> str:
+    return datetime.now().strftime("%H:%M:%S")
+
+
 def log(message: str, type: str = "INFO", colour: str = "white") -> None:
-    message = f"{type} [{datetime.now().strftime('%H:%M:%S')}]: {message}"
+    if silent:
+        return
+    message = f"{type} [{time()}]: {message}"
     click.echo(
         click.style(
             message,
@@ -30,3 +38,8 @@ def log(message: str, type: str = "INFO", colour: str = "white") -> None:
             fg=colour,
         )
     )
+
+
+def set_silent():
+    global silent
+    silent = True

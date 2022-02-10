@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import os
 import click
@@ -52,10 +53,14 @@ def prepare(config: Config) -> bool:
         return compile
 
 
-def execute(config: Config, compile: bool, run: bool) -> None:
+def execute(
+    config: Config, compile: bool, debug: bool, run: bool, output: bool
+) -> None:
+    opened = False
+    bar = "==========================================="
     if compile:
         helpers.log("Compiling...")
-        subprocess.run(
+        result = subprocess.run(
             [
                 "javac",
                 "-classpath",
@@ -63,12 +68,40 @@ def execute(config: Config, compile: bool, run: bool) -> None:
                 f"@{config.classes}",
                 "-d",
                 config.build,
-            ]
+            ],
+            capture_output=True,
+            text=True,
         )
+        if result.stderr:
+            run = False
+            opened = True
+            with open(config.errors, "a") as err_file:
+                err_file.writelines([bar, helpers.time(), result.stderr])
 
     if run:
-        helpers.log(f"Running from: {config.entry}")
-        subprocess.run(["java", "-cp", config.build, config.entry])
+        program = "java"
+        if debug:
+            program = "jdb"
+            helpers.log(f"DEBUG", colour="blue")
+        helpers.log(f"Running from - {config.entry}")
+        result = subprocess.run(
+            [program, "-classpath", config.build, config.entry],
+            capture_output=True,
+            text=True,
+        )
+        if output and result.stdout:
+            with open(config.output, "a") as out_file:
+                out_file.writelines([bar, helpers.time(), result.stdout, bar, ""])
+        if result.stderr:
+            with open(config.errors, "a") as err_file:
+                if not opened:
+                    err_file.write(bar + "\n")
+                opened = True
+                err_file.write(result.stderr + "\n")
+
+    if opened:
+        with open(config.errors, "a") as err_file:
+            err_file.write(bar + "\n\n")
 
 
 @click.command()
@@ -106,8 +139,26 @@ def execute(config: Config, compile: bool, run: bool) -> None:
     type=click.BOOL,
     help="Compile the project.",
 )
-@click.option("--run/--no-run", default=True, type=click.BOOL, help="Run the project.")
-@click.option("--errors", default=False, type=click.BOOL, help="Show last errors.")
+@click.option(
+    "--run/--no-run",
+    default=True,
+    type=click.BOOL,
+    help="Run the entry point `main` method.",
+)
+@click.option(
+    "-si",
+    "--silent",
+    is_flag=True,
+    type=click.BOOL,
+    help="Disable console logs.",
+)
+@click.option(
+    "-o",
+    "--output",
+    is_flag=True,
+    type=click.BOOL,
+    help="Capture execution output.",
+)
 def main(
     config_path: str,
     build: str,
@@ -116,12 +167,32 @@ def main(
     debug: bool,
     compile: bool,
     run: bool,
-    errors: bool,
+    silent: bool,
+    output: bool,
 ) -> None:
     """
     A lightweight wrapper for the Java CLI programs to act as a build tool
     for fast development of complex projects in a simple environment.
     """
+
+    if silent:
+        helpers.set_silent()
+
+    programs = [["java", "--version"], ["javac", "-version"], ["jdb", "-version"]]
+    for program in programs:
+        try:
+            result = subprocess.run(
+                program,
+                capture_output=True,
+                text=True,
+            )
+            version = re.sub("\n.*", "", result.stdout)
+            helpers.log(version, type="", colour="green")
+        except FileNotFoundError:
+            helpers.log(
+                f"Failed to find program '{program}'", type="ERROR", colour="red"
+            )
+            return
 
     helpers.log("Preparing to build...")
     config_opts = {}
@@ -139,7 +210,7 @@ def main(
 
     if compile:
         compile = prepare(config)
-    execute(config, compile, run)
+    execute(config, compile, debug, run, output)
 
 
 if __name__ == "__main__":

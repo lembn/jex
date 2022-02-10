@@ -24,19 +24,6 @@ These attributes can also be set in the tool directly, by passing them as comman
 
 ## Roadmap
 
-- [ ] Log compile-time errors, then quit (don't run)
-- [ ] Log run-time errors
-- [ ] Log to file
-- [ ] Create flag for silent/loud
-- [ ] Debug mode
-  - [ ] Call `jdb` instead of `java`
-  - [ ] Debug binaries have to be compiled differently
 - [ ] Change lisence
 - [ ] Create executable
   - [ ] Create release
-
-```python
-result = subprocess.run(['ls', '-l'], capture_output=True, text=True)
-print(result.stdout)
-print(result.stderr)
-```
