@@ -24,19 +24,19 @@ These attributes can also be set in the tool directly, by passing them as comman
 
 ## Roadmap
 
-- [ ] Add support for command line args as well as config file (`jexe.json`)
-  - [ ] Pass path to config file as argument, default value is root
-- [ ] Better logging
-  - [ ] Use `click.echo()` instead of `print()`
-  - [ ] Format
-  - [ ] Log to file
-- [ ] Handle errors
-  - [ ] Log compile-time errors, then quit (don't run)
-  - [ ] Log run-time errors
-  - [ ] Create flag that will show errors
-  - [ ] Reset errors per build
+- [ ] Log compile-time errors, then quit (don't run)
+- [ ] Log run-time errors
+- [ ] Log to file
+- [ ] Create flag for silent/loud
 - [ ] Debug mode
   - [ ] Call `jdb` instead of `java`
   - [ ] Debug binaries have to be compiled differently
+- [ ] Change lisence
 - [ ] Create executable
   - [ ] Create release
+
+```python
+result = subprocess.run(['ls', '-l'], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr)
+```
