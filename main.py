@@ -122,7 +122,7 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.0.4")
+@click.version_option("1.0.5")
 @click.option(
     "-c",
     "--config-path",
@@ -206,7 +206,9 @@ def main(
     if silent:
         helpers.set_silent()
 
-    programs = [["java", "--version"], ["javac", "-version"], ["jdb", "-version"]]
+    programs = [["java", "--version"], ["javac", "-version"]]
+    if debug:
+        programs.append(["jdb", "-version"])
     for program in programs:
         try:
             result = subprocess.run(
