@@ -105,6 +105,7 @@ def execute(
 
 
 @click.command()
+@click.version_option("1.0.0")
 @click.option(
     "-c",
     "--config-path",

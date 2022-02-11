@@ -21,8 +21,3 @@ Build configuration can be customised by creating a `jexe.json`, where certain a
 - `entry` is the Java FQN of the entry point file.
 
 These attributes can also be set in the tool directly, by passing them as command line options, when execute the program
-
-## Roadmap
-
-- [ ] Create executable
-  - [ ] Create release
