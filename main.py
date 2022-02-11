@@ -27,7 +27,14 @@ def prepare(config: Config) -> bool:
                         name = helpers.join(root, name)
                         filenames.append(name)
                         file_hash = helpers.hash_file(name)
-                        if name in hashes and hashes[name] == file_hash:
+                        name_ = re.sub(r"(\./)", "", name)
+                        name_ = re.sub(".java", ".class", name_)
+                        bin_path = helpers.join(config.build, name_)
+                        if (
+                            name in hashes
+                            and hashes[name] == file_hash
+                            and os.path.exists(bin_path)
+                        ):
                             continue
                         helpers.log(f"Found updated file: {name}")
                         compile = True
@@ -57,7 +64,7 @@ def execute(
     config: Config, compile: bool, debug: bool, run: bool, output: bool
 ) -> None:
     opened = False
-    bar = "==========================================="
+    bar = "===========================================\n"
     if compile:
         helpers.log("Compiling...")
         result = subprocess.run(
@@ -76,13 +83,18 @@ def execute(
             run = False
             opened = True
             with open(config.errors, "a") as err_file:
-                err_file.writelines([bar, helpers.time(), result.stderr])
+                err_file.writelines([bar, helpers.time() + "\n", result.stderr])
+            helpers.log(
+                f"Occurred during compilation, check {os.path.abspath(config.errors)} for info.",
+                type="ERROR",
+                colour="red",
+            )
 
     if run:
         program = "java"
         if debug:
             program = "jdb"
-            helpers.log(f"DEBUG", colour="blue")
+            helpers.log("DEBUG", colour="blue")
         helpers.log(f"Running from - {config.entry}")
         result = subprocess.run(
             [program, "-classpath", config.build, config.entry],
@@ -95,21 +107,27 @@ def execute(
         if result.stderr:
             with open(config.errors, "a") as err_file:
                 if not opened:
-                    err_file.write(bar + "\n")
-                opened = True
-                err_file.write(result.stderr + "\n")
+                    err_file.writelines([bar, helpers.time() + "\n"])
+                    opened = True
+                err_file.write(result.stderr)
+            helpers.log(
+                f"Occurred during execution, check {os.path.abspath(config.errors)} for info.",
+                type="ERROR",
+                colour="red",
+            )
 
     if opened:
         with open(config.errors, "a") as err_file:
-            err_file.write(bar + "\n\n")
+            err_file.write(bar + "\n")
 
 
 @click.command()
-@click.version_option("1.0.0")
+@click.version_option("1.0.3")
 @click.option(
     "-c",
     "--config-path",
     default="./jexe.json",
+    show_default=True,
     type=click.Path(dir_okay=False),
     help="Path to the 'jexe.json' configuration file.",
 )
@@ -117,32 +135,39 @@ def execute(
     "-b",
     "--build",
     type=click.Path(file_okay=False),
-    help="Directory path to compile to.",
+    help=f"Directory path to compile to. [default: {Config.BUILD_DEFAULT}]",
 )
 @click.option(
     "-s",
     "--sources",
     type=click.Path(file_okay=False),
-    help="Path to the containing directory of the source code.",
+    help=f"Path to the containing directory of the source code. [default: {Config.SOURCES_DEFAULT}]",
 )
 @click.option(
     "-e",
     "--entry",
     type=click.STRING,
-    help="Java FQN of the entry point file.",
+    help=f"Java FQN of the entry point file. [default: {Config.ENTRY_DEFAULT}]",
 )
 @click.option(
-    "-d", "--debug", default=False, type=click.BOOL, help="Run in debug mode."
+    "-d",
+    "--debug",
+    default=False,
+    show_default=True,
+    type=click.BOOL,
+    help="Run in debug mode.",
 )
 @click.option(
     "--compile/--no-compile",
     default=True,
+    show_default=True,
     type=click.BOOL,
     help="Compile the project.",
 )
 @click.option(
     "--run/--no-run",
     default=True,
+    show_default=True,
     type=click.BOOL,
     help="Run the entry point `main` method.",
 )
@@ -150,6 +175,7 @@ def execute(
     "-si",
     "--silent",
     is_flag=True,
+    show_default=True,
     type=click.BOOL,
     help="Disable console logs.",
 )
@@ -157,6 +183,7 @@ def execute(
     "-o",
     "--output",
     is_flag=True,
+    show_default=True,
     type=click.BOOL,
     help="Capture execution output.",
 )

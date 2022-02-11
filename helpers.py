@@ -33,7 +33,6 @@ def log(message: str, type: str = "INFO", colour: str = "white") -> None:
     click.echo(
         click.style(
             message,
-            blink=True,
             bold=True,
             fg=colour,
         )
