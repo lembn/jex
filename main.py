@@ -122,7 +122,7 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.0.3")
+@click.version_option("1.0.4")
 @click.option(
     "-c",
     "--config-path",
@@ -218,7 +218,7 @@ def main(
             helpers.log(version, type="", colour="green")
         except FileNotFoundError:
             helpers.log(
-                f"Failed to find program '{program}'", type="ERROR", colour="red"
+                f"Failed to find program '{program[0]}'", type="ERROR", colour="red"
             )
             return
 
