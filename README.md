@@ -1,4 +1,4 @@
-# jexe
+# jex
 
 A lightweight wrapper for the Java CLI programs to act as a build tool for fast development of complex projects in a simple environment.
 
@@ -6,7 +6,7 @@ A lightweight wrapper for the Java CLI programs to act as a build tool for fast 
 
 ## Build Configuration
 
-Build configuration can be customised by creating a `jexe.json`, where certain attributes of the build process can be set.
+Build configuration can be customised by creating a `jex.json`, where certain attributes of the build process can be set.
 
 ```json
 {

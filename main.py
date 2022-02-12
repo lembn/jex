@@ -91,6 +91,8 @@ def execute(
                 type="ERROR",
                 colour="red",
             )
+            os.remove(config.classes)
+            os.remove(config.hashes)
 
     if run:
         program = "java"
@@ -124,14 +126,14 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.0.6")
+@click.version_option("1.1.0")
 @click.option(
     "-c",
     "--config-path",
-    default="./jexe.json",
+    default="./jex.json",
     show_default=True,
     type=click.Path(dir_okay=False),
-    help="Path to the 'jexe.json' configuration file.",
+    help="Path to the 'jex.json' configuration file.",
 )
 @click.option(
     "-b",
@@ -246,4 +248,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(prog_name="jexe")
+    main(prog_name="jex")

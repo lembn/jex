@@ -20,7 +20,7 @@ class Config:
         if not build:
             return
         self.build = helpers.conv(build)
-        self.meta = helpers.join(self.build, ".jexe")
+        self.meta = helpers.join(self.build, ".jex")
         self.classes = helpers.join(self.meta, "classes")
         self.hashes = helpers.join(self.meta, "classes.json")
         self.errors = helpers.join(self.meta, "errors.txt")
