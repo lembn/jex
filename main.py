@@ -45,6 +45,8 @@ def prepare(config: Config) -> bool:
         for root, dirs, files in os.walk(config.build):
             for name in files:
                 if ".class" in name:
+                    if "$" in name:
+                        name = re.sub(r"\$.*", ".class", name)
                     name = helpers.join(root, name)
                     src_name = config.get_src_path(name.replace(".class", ".java"))
                     if src_name not in hashes:
@@ -122,7 +124,7 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.0.5")
+@click.version_option("1.0.6")
 @click.option(
     "-c",
     "--config-path",

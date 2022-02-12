@@ -36,4 +36,7 @@ class Config:
         self.entry = helpers.conv(entry)
 
     def get_src_path(self, original: str) -> str:
-        return original.replace(self.build, self.sources)
+        path = original.replace(self.build, self.sources)
+        path = helpers.conv(path)
+        path = path.replace("//", "/")
+        return path
