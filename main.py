@@ -27,9 +27,7 @@ def prepare(config: Config) -> bool:
                         name = helpers.join(root, name)
                         filenames.append(name)
                         file_hash = helpers.hash_file(name)
-                        name_ = re.sub(r"(\./)", "", name)
-                        name_ = re.sub(".java", ".class", name_)
-                        bin_path = helpers.join(config.build, name_)
+                        bin_path = config.transform(name, True)
                         if (
                             name in hashes
                             and hashes[name] == file_hash
@@ -48,7 +46,7 @@ def prepare(config: Config) -> bool:
                     if "$" in name:
                         name = re.sub(r"\$.*", ".class", name)
                     name = helpers.join(root, name)
-                    src_name = config.get_src_path(name.replace(".class", ".java"))
+                    src_name = config.transform(name, False)
                     if src_name not in hashes:
                         os.remove(name)
             for dir in dirs:
@@ -62,9 +60,7 @@ def prepare(config: Config) -> bool:
         return compile
 
 
-def execute(
-    config: Config, compile: bool, debug: bool, run: bool, output: bool
-) -> None:
+def execute(config: Config, compile: bool, debug: bool, run: bool) -> None:
     opened = False
     bar = "===========================================\n"
     if compile:
@@ -81,6 +77,7 @@ def execute(
             capture_output=True,
             text=True,
         )
+
         if result.stderr:
             run = False
             opened = True
@@ -100,14 +97,10 @@ def execute(
             program = "jdb"
             helpers.log("DEBUG", colour="blue")
         helpers.log(f"Running from - {config.entry}")
-        result = subprocess.run(
-            [program, "-classpath", config.build, config.entry],
-            capture_output=True,
-            text=True,
-        )
-        if output and result.stdout:
-            with open(config.output, "a") as out_file:
-                out_file.writelines([bar, helpers.time(), result.stdout, bar, ""])
+        print()
+
+        result = subprocess.run([program, "-classpath", config.build, config.entry])
+
         if result.stderr:
             with open(config.errors, "a") as err_file:
                 if not opened:
@@ -126,7 +119,7 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.1.0")
+@click.version_option("1.2.0")
 @click.option(
     "-c",
     "--config-path",
@@ -183,14 +176,6 @@ def execute(
     type=click.BOOL,
     help="Disable console logs.",
 )
-@click.option(
-    "-o",
-    "--output",
-    is_flag=True,
-    show_default=True,
-    type=click.BOOL,
-    help="Capture execution output.",
-)
 def main(
     config_path: str,
     build: str,
@@ -200,11 +185,19 @@ def main(
     compile: bool,
     run: bool,
     silent: bool,
-    output: bool,
 ) -> None:
     """
     A lightweight wrapper for the Java CLI programs to act as a build tool
     for fast development of complex projects in a simple environment.
+
+    \b
+    jex.json format:
+    {
+        "build": ...,
+        "sources": ...,
+        "entry": ...,
+        "debug": ...
+    }
     """
 
     if silent:
@@ -244,7 +237,7 @@ def main(
 
     if compile:
         compile = prepare(config)
-    execute(config, compile, debug, run, output)
+    execute(config, compile, debug, run)
 
 
 if __name__ == "__main__":

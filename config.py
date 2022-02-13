@@ -35,8 +35,13 @@ class Config:
             return
         self.entry = helpers.conv(entry)
 
-    def get_src_path(self, original: str) -> str:
-        path = original.replace(self.build, self.sources)
-        path = helpers.conv(path)
-        path = path.replace("//", "/")
+    def transform(self, path: str, src_to_build: bool) -> str:
+        current_ext, target_ext = (
+            (".java", ".class") if src_to_build else (".class", ".java")
+        )
+        current_dir, target_dir = (
+            (self.sources, self.build) if src_to_build else (self.build, self.sources)
+        )
+        path = path.replace(current_ext, target_ext)
+        path = path.replace(current_dir, target_dir, 1)
         return path
