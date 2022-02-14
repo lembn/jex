@@ -3,13 +3,15 @@ import platform
 import re
 import subprocess
 import os
+from typing import List
 import click
 import helpers
 from config import Config
 
 # TODO: add library support
 
-def get_comp_list(config: Config) -> list[str]:
+
+def get_comp_list(config: Config) -> List[str]:
     if not os.path.exists(config.meta):
         os.makedirs(config.meta)
     if not os.path.exists(config.classes):
@@ -60,7 +62,7 @@ def get_comp_list(config: Config) -> list[str]:
         return compile
 
 
-def execute(config: Config, compile: list[str], debug: bool, run: bool) -> None:
+def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
     opened = False
     bar = "===========================================\n"
     if compile:
@@ -68,14 +70,7 @@ def execute(config: Config, compile: list[str], debug: bool, run: bool) -> None:
         classpath = f"{config.build}{sep}{config.libs}" if config.libs else config.build
         helpers.log("Compiling...")
         result = subprocess.run(
-            [
-                "javac",
-                "-classpath",
-                classpath,
-                "-d",
-                config.build,
-                *compile
-            ]
+            ["javac", "-classpath", classpath, "-d", config.build, *compile]
         )
 
         if result.stderr:
@@ -118,7 +113,7 @@ def execute(config: Config, compile: list[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.3.0")
+@click.version_option("1.3.3")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
@@ -127,7 +122,7 @@ def execute(config: Config, compile: list[str], debug: bool, run: bool) -> None:
     "--config-path",
     default="./jex.json",
     show_default=True,
-    type=click.Path(exists=True, dir_okay=False),
+    type=click.Path(dir_okay=False),
     help="Path to the 'jex.json' configuration file.",
 )
 @click.option(
@@ -247,6 +242,7 @@ def main(
         execute(config, comp_list, debug, run)
     except FileNotFoundError as e:
         helpers.log(e, type="ERROR", colour="red")
+
 
 if __name__ == "__main__":
     main(prog_name="jex")
