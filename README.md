@@ -18,6 +18,7 @@ Build configuration can be customised by creating a `jex.json` file and pointing
 
 ```
 Options:
+Options:
   --version                 Show the version and exit.
   -c, --config-path FILE    Path to the 'jex.json' configuration file.
                             [default: ./jex.json]
@@ -25,6 +26,10 @@ Options:
   -s, --sources DIRECTORY   Path to the containing directory of the source
                             code. [default: ./src]
   -e, --entry TEXT          Java FQN of the entry point file. [default: Main]
+  -l, --libs DIRECTORY      Path to the containing directory of library files
+                            (*.jar). This option has no default, if not
+                            explicitly defined, no libaries will be passed to
+                            the compiler.
   -d, --debug BOOLEAN       Run in debug mode.  [default: False]
   --compile / --no-compile  Compile the project.  [default: compile]
   --run / --no-run          Run the entry point `main` method.  [default: run]

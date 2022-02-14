@@ -1,4 +1,5 @@
 import json
+import platform
 import re
 import subprocess
 import os
@@ -6,38 +7,37 @@ import click
 import helpers
 from config import Config
 
+# TODO: add library support
 
-def prepare(config: Config) -> bool:
+def get_comp_list(config: Config) -> list[str]:
     if not os.path.exists(config.meta):
         os.makedirs(config.meta)
-    if not os.path.exists(config.hashes):
-        with open(config.hashes, "w") as hash_file:
+    if not os.path.exists(config.classes):
+        with open(config.classes, "w") as hash_file:
             hash_file.write("{}")
 
     helpers.log("Collecting source files")
-    compile = False
-    with open(config.hashes, "r+") as hash_file:
+    with open(config.classes, "r+") as hash_file:
         hashes = json.load(hash_file)
         filenames = []
 
-        with open(config.classes, "w") as classes_file:
-            for root, _, files in os.walk(config.sources):
-                for name in files:
-                    if ".java" in name:
-                        name = helpers.join(root, name)
-                        filenames.append(name)
-                        file_hash = helpers.hash_file(name)
-                        bin_path = config.transform(name, True)
-                        if (
-                            name in hashes
-                            and hashes[name] == file_hash
-                            and os.path.exists(bin_path)
-                        ):
-                            continue
-                        helpers.log(f"Found updated file: {name}")
-                        compile = True
-                        classes_file.write(f"{name}\n")
-                        hashes[name] = file_hash
+        compile = []
+        for root, _, files in os.walk(config.sources):
+            for name in files:
+                if ".java" in name:
+                    name = helpers.join(root, name)
+                    filenames.append(name)
+                    file_hash = helpers.hash_file(name)
+                    bin_path = config.transform(name, True)
+                    if (
+                        name in hashes
+                        and hashes[name] == file_hash
+                        and os.path.exists(bin_path)
+                    ):
+                        continue
+                    helpers.log(f"Found updated file: {name}")
+                    compile.append(name)
+                    hashes[name] = file_hash
 
         hashes = {i: j for i, j in hashes.items() if i in filenames}
         for root, dirs, files in os.walk(config.build):
@@ -60,22 +60,22 @@ def prepare(config: Config) -> bool:
         return compile
 
 
-def execute(config: Config, compile: bool, debug: bool, run: bool) -> None:
+def execute(config: Config, compile: list[str], debug: bool, run: bool) -> None:
     opened = False
     bar = "===========================================\n"
     if compile:
+        sep = ";" if platform.system() == "Windows" else ":"
+        classpath = f"{config.build}{sep}{config.libs}" if config.libs else config.build
         helpers.log("Compiling...")
         result = subprocess.run(
             [
                 "javac",
                 "-classpath",
-                config.build,
-                f"@{config.classes}",
+                classpath,
                 "-d",
                 config.build,
-            ],
-            capture_output=True,
-            text=True,
+                *compile
+            ]
         )
 
         if result.stderr:
@@ -89,7 +89,6 @@ def execute(config: Config, compile: bool, debug: bool, run: bool) -> None:
                 colour="red",
             )
             os.remove(config.classes)
-            os.remove(config.hashes)
 
     if run:
         program = "java"
@@ -119,13 +118,16 @@ def execute(config: Config, compile: bool, debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.2.0")
+@click.version_option("1.3.0")
+# The config options have no default so that their value will be None if they are
+# not passed in the command line. This is done so that Config.adjust() will when
+# it should or shouldn't overrdide file options
 @click.option(
     "-c",
     "--config-path",
     default="./jex.json",
     show_default=True,
-    type=click.Path(dir_okay=False),
+    type=click.Path(exists=True, dir_okay=False),
     help="Path to the 'jex.json' configuration file.",
 )
 @click.option(
@@ -137,7 +139,7 @@ def execute(config: Config, compile: bool, debug: bool, run: bool) -> None:
 @click.option(
     "-s",
     "--sources",
-    type=click.Path(file_okay=False),
+    type=click.Path(exists=True, file_okay=False),
     help=f"Path to the containing directory of the source code. [default: {Config.SOURCES_DEFAULT}]",
 )
 @click.option(
@@ -145,6 +147,12 @@ def execute(config: Config, compile: bool, debug: bool, run: bool) -> None:
     "--entry",
     type=click.STRING,
     help=f"Java FQN of the entry point file. [default: {Config.ENTRY_DEFAULT}]",
+)
+@click.option(
+    "-l",
+    "--libs",
+    type=click.Path(exists=True, file_okay=False),
+    help=f"Path to the containing directory of library files (*.jar). This option has no default, if not explicitly defined, no libaries will be passed to the compiler.",
 )
 @click.option(
     "-d",
@@ -181,6 +189,7 @@ def main(
     build: str,
     sources: str,
     entry: str,
+    libs: str,
     debug: bool,
     compile: bool,
     run: bool,
@@ -196,6 +205,7 @@ def main(
         "build": ...,
         "sources": ...,
         "entry": ...,
+        "lib": ...,
         "debug": ...
     }
     """
@@ -230,15 +240,13 @@ def main(
     else:
         helpers.log("Using default build configuration.")
 
-    config = Config(**config_opts)
-    config.set_build(build)
-    config.set_sources(sources)
-    config.set_entry(entry)
-
-    if compile:
-        compile = prepare(config)
-    execute(config, compile, debug, run)
-
+    try:
+        config = Config(**config_opts)
+        config.adjust(build, sources, entry, libs)
+        comp_list = get_comp_list(config) if compile else []
+        execute(config, comp_list, debug, run)
+    except FileNotFoundError as e:
+        helpers.log(e, type="ERROR", colour="red")
 
 if __name__ == "__main__":
     main(prog_name="jex")
