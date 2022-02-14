@@ -20,7 +20,7 @@ class Config:
             else:
                 return path
 
-    def __init__(self, **kwargs: dict[str, str]):
+    def __init__(self, **kwargs: str):
         self.set_build(kwargs.get(Config.BUILD_KEY, Config.BUILD_DEFAULT))
         self.sources = Config.path_exists(kwargs.get(Config.SOURCES_KEY), Config.SOURCES_DEFAULT)
         self.entry = helpers.conv(kwargs.get(Config.ENTRY_KEY, Config.ENTRY_DEFAULT))
