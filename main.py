@@ -113,7 +113,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.3.4")
+@click.version_option("1.3.5")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
@@ -231,7 +231,21 @@ def main(
     if os.path.isfile(config_path):
         helpers.log("Found custom build configuration")
         with open(config_path, "r") as config_file:
-            config_opts = json.load(config_file)
+            try:
+                config_opts = json.load(config_file)
+                for key in config_opts.keys():
+                    if key not in Config.KEYS:
+                        helpers.log(
+                            f"Invalid Jex configuration option {key}",
+                            type="ERROR",
+                            colour="red",
+                        )
+                        return
+            except json.JSONDecodeError:
+                helpers.log(
+                    "Invalid Jex configuration file", type="ERROR", colour="red"
+                )
+                return
     else:
         helpers.log("Using default build configuration.")
 

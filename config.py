@@ -10,19 +10,24 @@ class Config:
     ENTRY_KEY = "entry"
     ENTRY_DEFAULT = "Main"
     LIB_KEY = "lib"
+    KEYS = [BUILD_KEY, SOURCES_KEY, ENTRY_KEY, LIB_KEY]
 
     def path_exists(path: str, default: str = None) -> None:
         if not path:
             return default
         else:
             if not os.path.exists(path):
-                raise FileNotFoundError(f"The directory '{path}' provided from configuration file does not exist.")
+                raise FileNotFoundError(
+                    f"The directory '{path}' provided from configuration file does not exist."
+                )
             else:
                 return path
 
     def __init__(self, **kwargs: str):
         self.set_build(kwargs.get(Config.BUILD_KEY, Config.BUILD_DEFAULT))
-        self.sources = Config.path_exists(kwargs.get(Config.SOURCES_KEY), Config.SOURCES_DEFAULT)
+        self.sources = Config.path_exists(
+            kwargs.get(Config.SOURCES_KEY), Config.SOURCES_DEFAULT
+        )
         self.entry = helpers.conv(kwargs.get(Config.ENTRY_KEY, Config.ENTRY_DEFAULT))
         self.libs = Config.path_exists(kwargs.get(Config.LIB_KEY))
 
