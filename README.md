@@ -43,4 +43,4 @@ These attributes can also be set in the tool directly, by passing them as comman
 
 # ROADMAP
 
-- [ ] Handle invalid jex.json file better
+- [ ] Test lib with pattern `lib/**/*.jar` glob pattern
