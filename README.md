@@ -40,7 +40,3 @@ Options:
 > _Direcotry paths in `jex.json` should not include a traling `/`, for example: write `"build": "./build", not "build": "./build/"._
 
 These attributes can also be set in the tool directly, by passing them as command line options when executing the program. Any specified command line options will override `jex.json` settings.
-
-# ROADMAP
-
-- [ ] Test lib with pattern `lib/**/*.jar` glob pattern

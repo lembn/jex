@@ -3,7 +3,7 @@ import platform
 import re
 import subprocess
 import os
-from typing import List
+from typing import Callable, List
 import click
 import helpers
 from config import Config
@@ -65,9 +65,18 @@ def get_comp_list(config: Config) -> List[str]:
 def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
     opened = False
     bar = "===========================================\n"
+
+    sep = ";" if platform.system() == "Windows" else ":"
+    classpaths = [
+        config.build,
+        helpers.format_classpath(config.libs),
+    ]
+    for root, dirs, _ in os.walk(config.libs):
+        for dir in dirs:
+            classpaths.append(f"{helpers.join(root, dir)}/*")
+    classpath = sep.join(classpaths)
+
     if compile:
-        sep = ";" if platform.system() == "Windows" else ":"
-        classpath = f"{config.build}{sep}{config.libs}" if config.libs else config.build
         helpers.log("Compiling...")
         result = subprocess.run(
             ["javac", "-classpath", classpath, "-d", config.build, *compile]
@@ -93,7 +102,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
         helpers.log(f"Running from - {config.entry}")
         print()
 
-        result = subprocess.run([program, "-classpath", config.build, config.entry])
+        result = subprocess.run([program, "-classpath", classpath, config.entry])
 
         if result.stderr:
             with open(config.errors, "a") as err_file:
@@ -113,7 +122,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.3.5")
+@click.version_option("1.3.6")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
@@ -146,7 +155,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 @click.option(
     "-l",
     "--libs",
-    type=click.Path(exists=True, file_okay=False),
+    type=click.Path(),
     help=f"Path to the containing directory of library files (*.jar). This option has no default, if not explicitly defined, no libaries will be passed to the compiler.",
 )
 @click.option(

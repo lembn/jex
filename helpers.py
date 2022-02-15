@@ -6,6 +6,7 @@ import click
 
 conv: Callable[[str], str] = lambda x: x.replace("\\", "/")
 join: Callable[[str, str], str] = lambda x, y: conv(os.path.join(x, y))
+format_classpath: Callable[[str], str] = lambda x: f"{x}/*"
 
 silent = False
 
