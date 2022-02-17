@@ -41,6 +41,40 @@ Options:
 
 These attributes can also be set in the tool directly, by passing them as command line options when executing the program. Any specified command line options will override `jex.json` settings.
 
-# TODO
+## Usage With IDEs
+
+Jex is designed to make Java development fast and lightweight, outside of an environment like IntelliJ or Eclipse, but some users may still want to use an IDE for writing code instead of just CLI tools or Notepad++. In this case, Jex recommends Visual Studio Code: a lightweight, versatlie IDE that will provide all the niceties of modern IDE development, with none of the extra hassle.
+
+By nature, VSCode works directly on files and folders - without creating or requiring any extra metadata or project files to work out of the box. This is great because it will keep projects lightweight and independent from any overaching structure. VSCode is a general IDE that programmers can write any language in, so by default requires an extension to be installed to enhance the Java experience (don't worry, these won't effect your actual project files/structure in any way). Install [Language Support for Java(TM) by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) into VSCode to provide linting, autocompletion and formatting support for Java. Then, in the root of the project, create a directory called `.vscode` and adda file to it called `settings.json`. Here we'll configure the settings for your project. Add following JSON entries to the file:
+
+```json
+{
+  "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+  "java.project.referencedLibraries": ["lib/**/*.jar"]
+}
+```
+
+- `"java.format.settings.url"` sets the formatter code style.
+- `"java.project.referencedLibraries"` informs VSCode where the jar files for your external libraries are, allowing VSCode to provide autocompletion for your external libraries. This option is not required since Jex is completely seperate from VSCode and will still find your external libraries as long as you specify where they are.
+
+These values can be adjusted to better suit your preferences and the structure of your project.
+
+## Why Jex?
+
+In all honesty, VSCode with its [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) extension, could be used _completely_ in place of Jex, since it collects, compiles and executes code just like Jex does. Jex simply offers _another way_ to do the same thing, but in different environments (outside of an IDE). However if you don't care about other environments, Jex still contains many features VSCode debugger doesn't have:
+
+- Initialsing projects
+- Running tests
+- Packaging projects into `.jar`
+- Converting projects into BlueJ format
+
+Furthermore, Jex provides more transparency into what is actually happening to your code to get it to execute. If these are features that you're interested in, give Jex a try.
+
+# Roadmap
 
 - [ ] Fix debug mode
+- [ ] Add init command
+- [ ] Add test command
+- [ ] Add convert to blueJ command
+  - [ ] Enforce Java11
+- [ ] Add build to jar command
