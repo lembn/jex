@@ -68,7 +68,7 @@ In all honesty, VSCode with its [Debugger for Java](https://marketplace.visualst
 - Packaging projects into `.jar`
 - Converting projects into BlueJ format
 
-Furthermore, Jex provides more transparency into what is actually happening to your code to get it to execute. If these are features that you're interested in, give Jex a try.
+Furthermore, Jex provides complete transparency into what is actually happening to your code to get it to execute. The extreme lightweight design makes Jex great at quickly accomodating extensions in the functionality of your projects in a simple and intuitve way. For example, adding JavaFX to a Jex project doesn't require any extra extensions or complex configuration, just needs a quick and simple definition in the `jex.json` file. If any these are features that you're interested in, give Jex a try and see if you like it!
 
 # Roadmap
 

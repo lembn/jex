@@ -3,10 +3,10 @@ import platform
 import re
 import subprocess
 import os
-from typing import Callable, List
+from typing import List
 import click
 import helpers
-from config import Config
+from config import Config, ConfigLoadError
 
 # TODO: add library support
 
@@ -65,6 +65,7 @@ def get_comp_list(config: Config) -> List[str]:
 def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
     opened = False
     bar = "===========================================\n"
+    args = []
 
     sep = ";" if platform.system() == "Windows" else ":"
     classpaths = [
@@ -75,12 +76,20 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
         for dir in dirs:
             classpaths.append(f"{helpers.join(root, dir)}/*")
     classpath = sep.join(classpaths)
+    module_args = [
+        "--module-path",
+        sep.join(config.module_paths),
+        "--add-modules",
+        sep.join(config.modules),
+    ]
 
     if compile:
         helpers.log("Compiling...")
-        result = subprocess.run(
-            ["javac", "-classpath", classpath, "-d", config.build, *compile]
-        )
+        args = ["javac", "-classpath", classpath, "-d", config.build]
+        if config.module_paths:
+            args += module_args
+        args += compile
+        result = subprocess.run(args)
 
         if result.stderr:
             run = False
@@ -102,7 +111,11 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
         helpers.log(f"Running from - {config.entry}")
         print()
 
-        result = subprocess.run([program, "-classpath", classpath, config.entry])
+        args = [program, "-classpath", classpath]
+        if config.module_paths:
+            args += module_args
+        args.append(config.entry)
+        result = subprocess.run(args)
 
         if result.stderr:
             with open(config.errors, "a") as err_file:
@@ -122,7 +135,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.3.6")
+@click.version_option("1.4.0")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
@@ -209,9 +222,14 @@ def main(
         "build": ...,
         "sources": ...,
         "entry": ...,
-        "lib": ...,
+        "libs": ...,
+        "modulePaths": ...,
+        "modules": ...,
         "debug": ...
     }
+
+    NOTE: "modulePaths" and "modules" cannot be set by command line options,
+    they must be specified in jex.json if they are being used.
     """
 
     if silent:
@@ -263,7 +281,7 @@ def main(
         config.adjust(build, sources, entry, libs)
         comp_list = get_comp_list(config) if compile else []
         execute(config, comp_list, debug, run)
-    except FileNotFoundError as e:
+    except ConfigLoadError as e:
         helpers.log(e, type="ERROR", colour="red")
 
 
