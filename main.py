@@ -143,7 +143,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.5.1")
+@click.version_option("1.5.2")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options

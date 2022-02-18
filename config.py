@@ -95,10 +95,6 @@ class Config:
                     raise ConfigLoadError(
                         "If 'modules' is specified it cannot be empty."
                     )
-            else:
-                raise ConfigLoadError(
-                    "'modules' must be defined if 'modulePaths' is defined."
-                )
 
     def set_build(self, build: str, init: bool) -> None:
         if not init and build == self.build:
