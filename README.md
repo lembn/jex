@@ -16,21 +16,25 @@ Build configuration can be customised by creating a `jex.json` file and pointing
 }
 ```
 
+> _NOTE: `"modulePaths"` and `"modules"` cannot be set by command line options, they must be specified in jex.json if they are being used._
+
 ```
 Options:
-Options:
   --version                 Show the version and exit.
+  -n, --name TEXT           The name of the configuration to run from the
+                            'jex.json' file (if it exists).  [default:
+                            defualt]
   -c, --config-path FILE    Path to the 'jex.json' configuration file.
                             [default: ./jex.json]
   -b, --build DIRECTORY     Directory path to compile to. [default: ./build]
   -s, --sources DIRECTORY   Path to the containing directory of the source
                             code. [default: ./src]
   -e, --entry TEXT          Java FQN of the entry point file. [default: Main]
-  -l, --libs DIRECTORY      Path to the containing directory of library files
+  -l, --libs PATH           Path to the containing directory of library files
                             (*.jar). This option has no default, if not
                             explicitly defined, no libaries will be passed to
                             the compiler.
-  -d, --debug BOOLEAN       Run in debug mode.  [default: False]
+  -d, --debug               Run in debug mode.  [default: False]
   --compile / --no-compile  Compile the project.  [default: compile]
   --run / --no-run          Run the entry point `main` method.  [default: run]
   -si, --silent             Disable console logs.  [default: False]
@@ -50,12 +54,17 @@ By nature, VSCode works directly on files and folders - without creating or requ
 ```json
 {
   "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
-  "java.project.referencedLibraries": ["lib/**/*.jar"]
+  "java.project.referencedLibraries": ["lib/**/*.jar"],
+  "sources": {
+    "PATH/TO/JAR.jar": "PATH/TO/SOURCE/ZIP.zip",
+    ...,
+  }
 }
 ```
 
 - `"java.format.settings.url"` sets the formatter code style.
 - `"java.project.referencedLibraries"` informs VSCode where the jar files for your external libraries are, allowing VSCode to provide autocompletion for your external libraries. This option is not required since Jex is completely seperate from VSCode and will still find your external libraries as long as you specify where they are.
+- `"sources"` points VSCode to the source code archives for a given `.jar` file, allowing Javadocs from those source files to be displayed in the IDE [on hover](https://i.stack.imgur.com/bqlRi.png).
 
 These values can be adjusted to better suit your preferences and the structure of your project.
 
@@ -70,10 +79,15 @@ In all honesty, VSCode with its [Debugger for Java](https://marketplace.visualst
 
 Furthermore, Jex provides complete transparency into what is actually happening to your code to get it to execute. The extreme lightweight design makes Jex great at quickly accomodating extensions in the functionality of your projects in a simple and intuitve way. For example, adding JavaFX to a Jex project doesn't require any extra extensions or complex configuration, just needs a quick and simple definition in the `jex.json` file. If any these are features that you're interested in, give Jex a try and see if you like it!
 
+# TODO
+
+- test new build configurations
+
 # Roadmap
 
-- [ ] Fix debug mode
 - [ ] Add init command
+  - Generate structure
+  - Add README to lib folder
 - [ ] Add test command
 - [ ] Add convert to blueJ command
   - [ ] Enforce Java11

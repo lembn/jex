@@ -68,20 +68,27 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
     args = []
 
     sep = ";" if platform.system() == "Windows" else ":"
-    classpaths = [
-        config.build,
-        helpers.format_classpath(config.libs),
-    ]
-    for root, dirs, _ in os.walk(config.libs):
-        for dir in dirs:
-            classpaths.append(f"{helpers.join(root, dir)}/*")
-    classpath = sep.join(classpaths)
-    module_args = [
-        "--module-path",
-        sep.join(config.module_paths),
-        "--add-modules",
-        sep.join(config.modules),
-    ]
+    if config.libs:
+        helpers.log(f"LIBS - {config.libs}")
+        classpaths = [config.build]
+        classpaths.append(helpers.format_classpath(config.libs))
+        for root, dirs, _ in os.walk(config.libs):
+            for dir in dirs:
+                classpaths.append(f"{helpers.join(root, dir)}/*")
+        classpath = sep.join(classpaths)
+    else:
+        classpath = config.build
+
+    module_args = []
+    if config.module_paths:
+        helpers.log(f"MODULE PATHS - {config.module_paths}")
+        helpers.log(f"MODULES - {config.modules}")
+        module_args += [
+            "--module-path",
+            sep.join(config.module_paths),
+            "--add-modules",
+            sep.join(config.modules),
+        ]
 
     if compile:
         helpers.log("Compiling...")
@@ -135,10 +142,18 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.4.0")
+@click.version_option("1.5.0")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
+@click.option(
+    "-n",
+    "--name",
+    default="defualt",
+    show_default=True,
+    type=click.STRING,
+    help="The name of the configuration to run from the 'jex.json' file (if it exists).",
+)
 @click.option(
     "-c",
     "--config-path",
@@ -174,7 +189,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 @click.option(
     "-d",
     "--debug",
-    default=False,
+    is_flag=True,
     show_default=True,
     type=click.BOOL,
     help="Run in debug mode.",
@@ -202,6 +217,7 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
     help="Disable console logs.",
 )
 def main(
+    name: str,
     config_path: str,
     build: str,
     sources: str,
@@ -254,35 +270,60 @@ def main(
             return
 
     helpers.log("Preparing to build...")
-    config_opts = {}
+    configuration = {}
+    config = None
     if os.path.isfile(config_path):
-        helpers.log("Found custom build configuration")
+        helpers.log("Found custom build configuration.")
         with open(config_path, "r") as config_file:
             try:
-                config_opts = json.load(config_file)
-                for key in config_opts.keys():
-                    if key not in Config.KEYS:
+                names = name.split(".")
+                configurations = json.load(config_file)
+                for config_name in names:
+                    configuration = configurations.get(config_name)
+
+                    if not configuration:
                         helpers.log(
-                            f"Invalid Jex configuration option {key}",
+                            f"No configuration found with name '{config_name}'.",
                             type="ERROR",
                             colour="red",
                         )
                         return
+
+                    for key in configuration.keys():
+                        if key not in Config.KEYS:
+                            helpers.log(
+                                f"Invalid Jex configuration option {key}.",
+                                type="ERROR",
+                                colour="red",
+                            )
+                            return
+
+                    if not config:
+                        config = Config(**configuration)
+                    else:
+                        config.adjust(**configuration)
             except json.JSONDecodeError:
                 helpers.log(
-                    "Invalid Jex configuration file", type="ERROR", colour="red"
+                    "Invalid Jex configuration file.", type="ERROR", colour="red"
                 )
                 return
+            except FileNotFoundError or ConfigLoadError as e:
+                helpers.log(e, type="ERROR", colour="red")
     else:
         helpers.log("Using default build configuration.")
 
-    try:
-        config = Config(**config_opts)
-        config.adjust(build, sources, entry, libs)
-        comp_list = get_comp_list(config) if compile else []
-        execute(config, comp_list, debug, run)
-    except ConfigLoadError as e:
-        helpers.log(e, type="ERROR", colour="red")
+    if config.silent:
+        helpers.set_silent()
+    config.adjust(
+        {
+            Config.BUILD_KEY: build,
+            Config.SOURCES_KEY: sources,
+            Config.ENTRY_KEY: entry,
+            Config.LIBS_KEY: libs,
+        }
+    )
+    comp_list = get_comp_list(config) if compile else []
+    execute(config, comp_list, debug, run)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,6 @@
 import os
 import helpers
 
-# TODO: validate that modulePaths and modules are arrays
-# TODO: make sure that modulePaths exists with modules
-# TODO: make sure that modules exists with modulePaths
-
 
 class ConfigLoadError(Exception):
     pass
@@ -12,68 +8,98 @@ class ConfigLoadError(Exception):
 
 class Config:
     BUILD_KEY = "build"
-    BUILD_DEFAULT = "./build"
     SOURCES_KEY = "sources"
-    SOURCES_DEFAULT = "./src"
     ENTRY_KEY = "entry"
-    ENTRY_DEFAULT = "Main"
+    SILENT_KEY = "silent"
     LIBS_KEY = "lib"
     MODULE_PATHS_KEY = "modulePaths"
     MODULES_KEY = "modules"
+
+    BUILD_DEFAULT = "./build"
+    SOURCES_DEFAULT = "./src"
+    ENTRY_DEFAULT = "Main"
+    SILENT_DEFAULT = False
 
     KEYS = [
         BUILD_KEY,
         SOURCES_KEY,
         ENTRY_KEY,
+        SILENT_KEY,
         LIBS_KEY,
         MODULE_PATHS_KEY,
         MODULES_KEY,
     ]
 
-    def path_exists(path: str, default: str = None, strict: bool = False) -> None:
-        if not path and not strict:
-            return default
-        else:
-            if not os.path.exists(path):
-                raise ConfigLoadError(
-                    f"The path '{path}' provided from configuration file does not exist."
-                )
-            else:
-                return helpers.conv(path)
-
     def __init__(self, **kwargs: str):
         self.set_build(kwargs.get(Config.BUILD_KEY, Config.BUILD_DEFAULT))
-        self.sources = Config.path_exists(
-            kwargs.get(Config.SOURCES_KEY), default=Config.SOURCES_DEFAULT
-        )
+        self.sources = kwargs.get(Config.SOURCES_KEY, Config.SOURCES_DEFAULT)
         self.entry = helpers.conv(kwargs.get(Config.ENTRY_KEY, Config.ENTRY_DEFAULT))
-        self.libs = Config.path_exists(kwargs.get(Config.LIBS_KEY))
-
-        module_paths = kwargs.get(Config.MODULE_PATHS_KEY)
-        modules = kwargs.get(Config.MODULES_KEY)
-        if not isinstance(module_paths, list):
-            raise ConfigLoadError("Invalid modulePaths. Must be an array.")
-        if module_paths == []:
-            raise ConfigLoadError("If modulePaths is specified it cannot be empty.")
+        self.silent = kwargs.get(Config.SILENT_KEY, Config.SILENT_DEFAULT)
+        self.libs = Config.safe_conv(kwargs.get(Config.LIBS_KEY))
+        self.module_paths = kwargs.get(Config.MODULE_PATHS_KEY)
+        if not self.module_paths == None:
+            if not isinstance(self.module_paths, list):
+                raise ConfigLoadError("Invalid 'modulePaths' - must be an array.")
+            if self.module_paths == []:
+                raise ConfigLoadError(
+                    "If 'modulePaths' is specified it cannot be empty."
+                )
+            else:
+                self.module_paths = map(
+                    lambda x: helpers.safe_conv(x), self.module_paths
+                )
+            self.modules = kwargs.get(Config.MODULES_KEY)
+            if not self.modules == None:
+                if not isinstance(self.modules, list):
+                    raise ConfigLoadError("Invalid 'modules' - must be an array.")
+                if self.modules == []:
+                    raise ConfigLoadError(
+                        "If 'modules' is specified it cannot be empty."
+                    )
+                else:
+                    self.modules = self.modules
+            else:
+                raise ConfigLoadError(
+                    "'modules' must be defined if 'modulePaths' is defined."
+                )
         else:
-            self.module_paths = map(
-                lambda x: Config.path_exists(x, strict=True), module_paths
-            )
-        if not isinstance(modules, list):
-            raise ConfigLoadError("Invalid modulePaths. Must be an array.")
-        if modules == []:
-            raise ConfigLoadError("If modules is specified it cannot be empty.")
-        else:
-            self.module_paths = modules
+            self.modules = None
 
-    def adjust(self, build: str, sources: str, entry: str, libs: str):
-        self.set_build(build)
-        self.sources = helpers.conv(sources) if sources else self.sources
-        self.entry = helpers.conv(entry) if entry else self.entry
-        self.libs = helpers.conv(libs) if libs else self.libs
+    def adjust(self, **kwargs: str):
+        self.set_build(kwargs.get(Config.BUILD_KEY, self.build))
+        self.sources = helpers.safe_conv(kwargs.get(Config.SOURCES_KEY, self.sources))
+        self.entry = helpers.conv(kwargs.get(Config.ENTRY_KEY, self.entry))
+        self.silent = kwargs.get(Config.SILENT_KEY, self.silent)
+        self.libs = helpers.safe_conv(kwargs.get(Config.LIBS_KEY, self.libs))
+        self.module_paths = kwargs.get(Config.MODULE_PATHS_KEY)
+        if not self.module_paths == None:
+            if not isinstance(self.module_paths, list):
+                raise ConfigLoadError("Invalid 'modulePaths' - must be an array.")
+            if self.module_paths == []:
+                raise ConfigLoadError(
+                    "If 'modulePaths' is specified it cannot be empty."
+                )
+            else:
+                self.module_paths = map(
+                    lambda x: helpers.safe_conv(x), self.module_paths
+                )
+            self.modules = kwargs.get(Config.MODULES_KEY)
+            if not self.modules == None:
+                if not isinstance(self.modules, list):
+                    raise ConfigLoadError("Invalid 'modules' - must be an array.")
+                if self.modules == []:
+                    raise ConfigLoadError(
+                        "If 'modules' is specified it cannot be empty."
+                    )
+                else:
+                    self.modules = self.modules
+            else:
+                raise ConfigLoadError(
+                    "'modules' must be defined if 'modulePaths' is defined."
+                )
 
     def set_build(self, build: str) -> None:
-        if not build:
+        if build == self.build:
             return
         self.build = helpers.conv(build)
         self.meta = helpers.join(self.build, ".jex")

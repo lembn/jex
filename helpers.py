@@ -43,3 +43,12 @@ def log(message: str, type: str = "INFO", colour: str = "white") -> None:
 def set_silent():
     global silent
     silent = True
+
+
+def safe_conv(path: str) -> None:
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"The path '{path}' provided from configuration file does not exist."
+        )
+    else:
+        return conv(path)
