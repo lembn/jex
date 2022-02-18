@@ -89,6 +89,7 @@ By nature, VS Code works directly on files and folders - without creating or req
 > From [VS Code Documentation](https://code.visualstudio.com/docs/java/java-project).
 
 This means that source archives only need to be added to the `"sources"` mapping if VS Code can't find them with its default behaviour.
+To use Jex in VS Code, open VS Code's intergrated terminal, and everything in Jex can be done from there.
 
 ## Why Jex?
 
@@ -99,12 +100,19 @@ In all honesty, VS Code with its [Debugger for Java](https://marketplace.visuals
 - Packaging projects into `.jar`
 - Converting projects into BlueJ format
 
-Furthermore, Jex provides complete transparency into what is actually happening to your code to get it to execute. The extreme lightweight design makes Jex great at quickly accomodating extensions in the functionality of your projects in a simple and intuitve way. For example, adding JavaFX to a Jex project doesn't require any extra extensions or complex configuration, just needs a quick and simple definition in the `jex.json` file. If any these are features that you're interested in, give Jex a try and see if you like it!
+Furthermore, Jex provides complete transparency into what is actually happening to your code to get it to execute. The extreme lightweight design makes Jex great at quickly accomodating extensions in the functionality of your projects in a simple and intuitve way. For example, adding JavaFX to a VS Code Java project rqeuires:
+
+1. VS Code project manager for java to be installed,
+2. then the libraries have to be referenced in the project manager,
+3. then the VS Code debugger has to be reconfigured to inject the modules into the JVM.
+
+Even then the process can be difficult since some complex VS Code stuff has to happen under the hood to make everything work, so when stuff goes wrong it can be a debugging nightmare. Jex doesn't require any extra extensions or complex configuration, the whole process can be done with just two extra entries in the `jex.json` file. If any these features sound interesting, give Jex a try and see if you like it!
 
 ## TODO
 
 - How well does unit testing work with current Jex?
   - Should we add a testing mode?
+- Does it work with no settings and no CLI options
 
 # Roadmap
 
