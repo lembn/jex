@@ -20,6 +20,7 @@ class Config:
     SOURCES_DEFAULT = "./src"
     ENTRY_DEFAULT = "Main"
     SILENT_DEFAULT = False
+    NAME_DEFAULT = "default"
 
     KEYS = [
         BUILD_KEY,

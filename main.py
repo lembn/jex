@@ -143,14 +143,14 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.5.0")
+@click.version_option("1.5.1")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
 @click.option(
     "-n",
     "--name",
-    default="defualt",
+    default=Config.NAME_DEFAULT,
     show_default=True,
     type=click.STRING,
     help="The name of the configuration to run from the 'jex.json' file (if it exists).",
