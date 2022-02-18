@@ -1,0 +1,8 @@
+{
+    "default": {
+        "silent": true
+    },
+    "loud": {
+        "silent": false
+    }
+}

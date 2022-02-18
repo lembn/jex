@@ -1,6 +1,7 @@
 import json
 import platform
 import re
+import shutil
 import subprocess
 import os
 from typing import List
@@ -214,7 +215,15 @@ def execute(config: Config, compile: List[str], debug: bool, run: bool) -> None:
     is_flag=True,
     show_default=True,
     type=click.BOOL,
-    help="Disable console logs.",
+    help="Disable console logs. Also disables error messages.",
+)
+@click.option(
+    "-c",
+    "--clean",
+    is_flag=True,
+    show_default=True,
+    type=click.BOOL,
+    help="Delete old jex data before building.",
 )
 def main(
     name: str,
@@ -227,6 +236,7 @@ def main(
     compile: bool,
     run: bool,
     silent: bool,
+    clean: bool,
 ) -> None:
     """
     A lightweight wrapper for the Java CLI programs to act as a build tool
@@ -235,13 +245,18 @@ def main(
     \b
     jex.json format:
     {
-        "build": ...,
-        "sources": ...,
-        "entry": ...,
-        "libs": ...,
-        "modulePaths": ...,
-        "modules": ...,
-        "debug": ...
+        "default": {
+            "build": ...,
+            "sources": ...,
+            "entry": ...,
+            "libs": ...,
+            "modulePaths": ...,
+            "modules": ...,
+            "debug": ...
+        },
+        "debug": {
+        ...
+        }
     }
 
     NOTE: "modulePaths" and "modules" cannot be set by command line options,
@@ -270,58 +285,72 @@ def main(
             return
 
     helpers.log("Preparing to build...")
-    configuration = {}
     config = None
     if os.path.isfile(config_path):
-        helpers.log("Found custom build configuration.")
+        helpers.log("Found custom build configurations.")
         with open(config_path, "r") as config_file:
             try:
                 names = name.split(".")
                 configurations = json.load(config_file)
-                for config_name in names:
-                    configuration = configurations.get(config_name)
-
-                    if not configuration:
-                        helpers.log(
-                            f"No configuration found with name '{config_name}'.",
-                            type="ERROR",
-                            colour="red",
-                        )
-                        return
-
-                    for key in configuration.keys():
-                        if key not in Config.KEYS:
-                            helpers.log(
-                                f"Invalid Jex configuration option {key}.",
-                                type="ERROR",
-                                colour="red",
-                            )
-                            return
-
-                    if not config:
-                        config = Config(**configuration)
-                    else:
-                        config.adjust(**configuration)
             except json.JSONDecodeError:
                 helpers.log(
                     "Invalid Jex configuration file.", type="ERROR", colour="red"
                 )
                 return
-            except FileNotFoundError or ConfigLoadError as e:
+
+        for config_name in names:
+            configuration = configurations.get(config_name)
+
+            if configuration == None:
+                helpers.log(
+                    f"No configuration found with name '{config_name}'.",
+                    type="ERROR",
+                    colour="red",
+                )
+                return
+
+            for key in configuration.keys():
+                if key not in Config.KEYS:
+                    helpers.log(
+                        f"Invalid Jex configuration option {key}.",
+                        type="ERROR",
+                        colour="red",
+                    )
+                    return
+
+            try:
+                if not config:
+                    config = Config(**configuration)
+                else:
+                    config.adjust(**configuration)
+            except FileNotFoundError as e:
                 helpers.log(e, type="ERROR", colour="red")
+                return
+            except ConfigLoadError as e:
+                helpers.log(e, type="ERROR", colour="red")
+                return
+
+        helpers.log(f"Using custom configuration '{name}'.")
+        if config.silent or silent:
+            helpers.set_silent()
+
+        adjustment = {}
+        if build:
+            adjustment[Config.BUILD_KEY] = build
+        if sources:
+            adjustment[Config.SOURCES_KEY] = sources
+        if entry:
+            adjustment[Config.ENTRY_KEY] = entry
+        if libs:
+            adjustment[Config.LIBS_KEY] = libs
+        config.adjust(**adjustment)
     else:
         helpers.log("Using default build configuration.")
+        config = Config()
 
-    if config.silent:
-        helpers.set_silent()
-    config.adjust(
-        {
-            Config.BUILD_KEY: build,
-            Config.SOURCES_KEY: sources,
-            Config.ENTRY_KEY: entry,
-            Config.LIBS_KEY: libs,
-        }
-    )
+    if clean:
+        if os.path.exists(config.build):
+            shutil.rmtree(config.build)
     comp_list = get_comp_list(config) if compile else []
     execute(config, comp_list, debug, run)
 
