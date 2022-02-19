@@ -1,12 +1,23 @@
+from io import TextIOWrapper
 import os
 import hashlib
 from typing import Callable
 from datetime import datetime
 import click
 
+
+class ConfigLoadError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 conv: Callable[[str], str] = lambda x: x.replace("\\", "/")
 join: Callable[[str, str], str] = lambda x, y: conv(os.path.join(x, y))
-format_classpath: Callable[[str], str] = lambda x: f"{x}/*"
+updated: Callable[[str, str, str], bool] = (
+    lambda name, hashes, file_hash, bin_path: name not in hashes
+    or not hashes[name] == file_hash
+    or not os.path.exists(bin_path)
+)
 
 silent = False
 
@@ -52,3 +63,23 @@ def safe_conv(path: str) -> None:
         )
     else:
         return conv(path)
+
+
+def validate_array(arr: list[str], name: str) -> None:
+    if not isinstance(arr, list):
+        raise ConfigLoadError(f"Invalid '{name}' - must be an array.")
+    if arr == []:
+        raise ConfigLoadError(f"If '{name}' is specified it cannot be empty.")
+
+
+def prune(root: str, dirs: list[str]) -> None:
+    for dir in dirs:
+        dir = join(root, dir)
+        if not os.listdir(dir):
+            os.removedirs(dir)
+
+
+def overwrite(file: TextIOWrapper, data: str) -> None:
+    file.seek(0)
+    file.truncate()
+    file.write(data)

@@ -15,9 +15,10 @@ Build configuration can be customised by creating a `jex.json` file and pointing
     "sources": ...,
     "entry": ...,
     "libs": ...,
+    "resources": ...,
+    "excludeLibs": ...,
     "modulePaths": ...,
-    "modules": ...,
-    "debug": ...
+    "modules": ...
   },
   "debug": {
     ...
@@ -116,11 +117,10 @@ Even then the process can be difficult since some complex VS Code stuff has to h
 
 # Roadmap
 
-- [ ] Add `--clean` command
+- [ ] Convert `--compile` into subcommand
 - [ ] Add build to jar command
 - [ ] Add convert to blueJ command?
   - [ ] Enforce Java11
-- [ ] Add `"excludelLibs": []` to config
 - [ ] Add init command
   - Generate structure
   - Add README to lib folder
