@@ -65,10 +65,10 @@ def safe_conv(path: str) -> None:
         return conv(path)
 
 
-def validate_array(arr: list[str], name: str) -> None:
+def validate_array(arr: list[str], name: str, allow_empty: bool = False) -> None:
     if not isinstance(arr, list):
         raise ConfigLoadError(f"Invalid '{name}' - must be an array.")
-    if arr == []:
+    if arr == [] and not allow_empty:
         raise ConfigLoadError(f"If '{name}' is specified it cannot be empty.")
 
 

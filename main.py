@@ -115,6 +115,7 @@ def execute(
         for ex in config.exclude_libs:
             globbed = glob.glob(ex, recursive=True)
             ignore += list(map(lambda x: helpers.conv(x), globbed))
+        helpers.log(f"IGNORED - {ignore}")
         for root, dirs, _ in os.walk(config.libs):
             for dir in dirs:
                 dir_path = helpers.join(root, dir)
@@ -125,7 +126,6 @@ def execute(
     else:
         classpath = config.build
 
-    helpers.log(f"IGNORED - {ignore}")
     module_args = []
     if config.module_paths:
         helpers.log(f"MODULE PATHS - {config.module_paths}")
@@ -172,8 +172,8 @@ def execute(
     if debug:
         program = "jdb"
         helpers.log("DEBUG", colour="blue")
-    helpers.log(f"Running from - {config.entry}")
     print()
+    helpers.log(f"Running from - {config.entry}")
 
     args = [program, "-classpath", classpath]
     if config.module_paths:
@@ -196,10 +196,13 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.6.0")
+@click.version_option("1.6.1")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
+
+# List based configuration options are only available through jex.json because its
+# hard to read lists from command line
 @click.option(
     "-n",
     "--name",

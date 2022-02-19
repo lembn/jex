@@ -53,9 +53,11 @@ class Config:
         self.libs = kwargs.get(Config.LIBS_KEY)
         if self.libs:
             self.libs = helpers.safe_conv(self.libs)
-        self.exclude_libs = kwargs.get(Config.EXCLUDE_KEY, Config.EXCLUDE_DEFAULT)
+        self.exclude_libs = kwargs.get(Config.EXCLUDE_KEY)
         if not self.exclude_libs == None:
-            helpers.validate_array(self.exclude_libs, Config.EXCLUDE_KEY)
+            helpers.validate_array(
+                self.exclude_libs, Config.EXCLUDE_KEY, allow_empty=True
+            )
             self.exclude_libs = list(map(lambda x: helpers.conv(x), self.exclude_libs))
         self.module_paths = kwargs.get(Config.MODULE_PATHS_KEY)
         if not self.module_paths == None:

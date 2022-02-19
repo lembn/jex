@@ -90,7 +90,24 @@ By nature, VS Code works directly on files and folders - without creating or req
 > From [VS Code Documentation](https://code.visualstudio.com/docs/java/java-project).
 
 This means that source archives only need to be added to the `"sources"` mapping if VS Code can't find them with its default behaviour.
-To use Jex in VS Code, open VS Code's intergrated terminal, and everything in Jex can be done from there.
+
+To use Jex in VS Code, open VS Code's intergrated terminal, and everything in Jex can be done from there. If you don't mind a bit of extra configuration, open VS Code's "Command Pallet" (`ctrl`+`shift`+`p` _or `cmd`+`shift`+`p` on Mac_) and select "Preferences: Open Keyboard Shortcuts".
+
+> _NOTE: Make sure you don't accidentally select "Preferences: Open <u>**default**</u> Keyboard Shortcuts"._
+
+Then copy the following into the file _(place it between the two square brackets)_:
+
+```json
+{
+  "key": "ctrl+j",
+  "command": "workbench.action.terminal.sendSequence",
+  "args": { "text": "jex\r" }
+}
+```
+
+This will bind the key combination `ctrl`+`j` (or whatever you set it to) to run your program with Jex.
+
+> _NOTE: This will **not** autosave your code. To save all files before running, a seperate "Save All" command must be called (`ctrl`+`k` [`release ctrl`] + `s`). Advanced users may look into *mutli-command*/*macro* extensions for VS Code to allow the keybind to trigger VS Code's "Save All" command before running Jex._
 
 ## Why Jex?
 
