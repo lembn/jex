@@ -1,4 +1,3 @@
-from distutils.dir_util import copy_tree
 import glob
 import json
 import platform
@@ -116,12 +115,14 @@ def execute(
             globbed = glob.glob(ex, recursive=True)
             ignore += list(map(lambda x: helpers.conv(x), globbed))
         helpers.log(f"IGNORED - {ignore}")
-        for root, dirs, _ in os.walk(config.libs):
-            for dir in dirs:
-                dir_path = helpers.join(root, dir)
-                jars = [d for d in os.listdir(dir_path) if d.endswith(".jar")]
-                if dir_path not in ignore and len(jars) > 0:
-                    classpaths.append(dir_path + "/*")
+        for lib in config.libs:
+            classpaths.append(lib + "/*")
+            for root, dirs, _ in os.walk(lib):
+                for dir in dirs:
+                    dir_path = helpers.join(root, dir)
+                    jars = [d for d in os.listdir(dir_path) if d.endswith(".jar")]
+                    if dir_path not in ignore and len(jars) > 0:
+                        classpaths.append(dir_path + "/*")
         classpath = sep.join(classpaths)
     else:
         classpath = config.build
@@ -144,13 +145,13 @@ def execute(
             args += module_args
         args += updated_src
         helpers.log(args)
-        result = subprocess.run(args)
+        result = subprocess.run(args, text=True, capture_output=True)
 
-        if result.stderr:
+        if not result.returncode == 0:
             opened = True
             with open(config.errors, "a") as err_file:
                 err_file.writelines(
-                    [bar, helpers.time() + "\n", result.stderr], bar + "\n"
+                    [bar, helpers.time() + "\n", result.stderr, bar + "\n"]
                 )
             helpers.log(
                 f"Occurred during compilation, check {os.path.abspath(config.errors)} for info.",
@@ -158,8 +159,8 @@ def execute(
                 colour="red",
             )
             os.remove(config.class_hash)
-
             return
+
     if updated_res:
         for res in updated_res:
             target = config.transform(res, True)
@@ -182,7 +183,7 @@ def execute(
     helpers.log(args)
     result = subprocess.run(args)
 
-    if result.stderr:
+    if not result.returncode == 0:
         with open(config.errors, "a") as err_file:
             if not opened:
                 err_file.writelines([bar, helpers.time() + "\n"])
@@ -196,7 +197,7 @@ def execute(
 
 
 @click.command()
-@click.version_option("1.6.1")
+@click.version_option("1.6.2")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options
@@ -238,12 +239,6 @@ def execute(
     help=f"Java FQN of the entry point file. [default: {Config.ENTRY_DEFAULT}]",
 )
 @click.option(
-    "-l",
-    "--libs",
-    type=click.Path(exists=True, file_okay=False),
-    help=f"Path to the containing directory of library files (*.jar). This option has no default, if not explicitly defined, no libaries will be passed to the compiler.",
-)
-@click.option(
     "-r",
     "--resources",
     type=click.Path(exists=True, file_okay=False),
@@ -279,7 +274,6 @@ def main(
     build: str,
     sources: str,
     entry: str,
-    libs: str,
     resources: str,
     debug: bool,
     silent: bool,
@@ -307,8 +301,8 @@ def main(
         }
     }
 
-    NOTE: "modulePaths" and "modules" cannot be set by command line options,
-    they must be specified in jex.json if they are being used.
+    NOTE: "libs", "exludeLibs", "modulePaths" and "modules" cannot be set by command
+    line options, they must be specified in jex.json if they are being used.
     """
 
     if silent:
@@ -393,8 +387,6 @@ def main(
             adjustment[Config.SOURCES_KEY] = sources
         if entry:
             adjustment[Config.ENTRY_KEY] = entry
-        if libs:
-            adjustment[Config.LIBS_KEY] = libs
         if resources:
             adjustment[Config.RESOURCES_KEY] = resources
         config.adjust(**adjustment)

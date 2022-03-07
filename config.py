@@ -52,9 +52,10 @@ class Config:
         self.clean = kwargs.get(Config.CLEAN_KEY, Config.CLEAN_DEFAULT)
         self.libs = kwargs.get(Config.LIBS_KEY)
         if self.libs:
-            self.libs = helpers.safe_conv(self.libs)
-        self.exclude_libs = kwargs.get(Config.EXCLUDE_KEY)
-        if not self.exclude_libs == None:
+            helpers.validate_array(self.libs, Config.LIBS_KEY)
+            self.libs = list(map(lambda x: helpers.conv(x), self.libs))
+        self.exclude_libs = kwargs.get(Config.EXCLUDE_KEY, [])
+        if self.exclude_libs:
             helpers.validate_array(
                 self.exclude_libs, Config.EXCLUDE_KEY, allow_empty=True
             )
@@ -83,16 +84,6 @@ class Config:
         self.silent = kwargs.get(Config.SILENT_KEY, self.silent)
         self.debug = kwargs.get(Config.DEBUG_KEY, self.debug)
         self.clean = kwargs.get(Config.CLEAN_KEY, self.clean)
-        self.libs = kwargs.get(Config.LIBS_KEY, self.libs)
-        if self.libs:
-            self.libs = helpers.safe_conv(self.libs)
-        module_paths = kwargs.get(Config.MODULE_PATHS_KEY)  # NOT self.
-        if not module_paths == None:
-            helpers.validate_array(module_paths, Config.MODULE_PATHS_KEY)
-            self.module_paths = list(map(lambda x: helpers.safe_conv(x), module_paths))
-            self.modules = kwargs.get(Config.MODULES_KEY)
-            if not self.modules == None:
-                helpers.validate_array(self.modules, Config.MODULES_KEY)
 
     def set_build(self, build: str, init: bool) -> None:
         if not init and build == self.build:

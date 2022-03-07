@@ -99,13 +99,18 @@ Then copy the following into the file _(place it between the two square brackets
 
 ```json
 {
-  "key": "ctrl+j",
-  "command": "workbench.action.terminal.sendSequence",
-  "args": { "text": "jex\r" }
+    "key": "ctrl+j",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "jex\u000d" }
+},
+{
+    "key": "ctrl+shift+j",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0003" }
 }
 ```
 
-This will bind the key combination `ctrl`+`j` (or whatever you set it to) to run your program with Jex.
+This will bind the key combination `ctrl`+`j` (or whatever you set it to) to run your program with Jex, and `ctrl`+`shift`+`j` to injext `^C` (ETX) into your intergrated terminal, which will kill any running process. The ETX injection is useful because `ctrl`+`j` will not open the terminal when it runs Jex, so without the injection, you have to manually open the terminal, then abort with `ctrl`+`c`.
 
 > _NOTE: This will **not** autosave your code. To save all files before running, a seperate "Save All" command must be called (`ctrl`+`k` [`release ctrl`] + `s`). Advanced users may look into *mutli-command*/*macro* extensions for VS Code to allow the keybind to trigger VS Code's "Save All" command before running Jex._
 
