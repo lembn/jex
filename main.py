@@ -185,7 +185,6 @@ def execute(
     help="The name of the configuration to run from the 'jex.json' file (if it exists).",
 )
 @click.option(
-    "-c",
     "--config-path",
     default="./jex.json",
     show_default=True,

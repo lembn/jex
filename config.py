@@ -21,8 +21,8 @@ class Config:
     RESOURCES_KEY = "resources"
 
     NAME_DEFAULT = "default"
-    BUILD_DEFAULT = "./build"
-    SOURCES_DEFAULT = "./src"
+    BUILD_DEFAULT = "build"
+    SOURCES_DEFAULT = "src"
     ENTRY_DEFAULT = "Main"
     SILENT_DEFAULT = False
     DEBUG_DEFAULT = False
