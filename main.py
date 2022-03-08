@@ -90,7 +90,7 @@ def get_updated(config: Config) -> tuple[List[str], List[str]]:
                 for name in files:
                     name = helpers.join(root, name)
                     src_name = config.transform(name, False)
-                    if src_name not in hashes:
+                    if src_name not in hashes and Config.JEX not in src_name:
                         os.remove(name)
                 helpers.prune(root, dirs)
             helpers.overwrite(hash_file, json.dumps(hashes))
@@ -101,8 +101,6 @@ def get_updated(config: Config) -> tuple[List[str], List[str]]:
 def execute(
     config: Config, updated_src: List[str], updated_res: List[str], debug: bool
 ) -> None:
-    opened = False
-    bar = "===========================================\n"
     args = []
 
     print()
@@ -145,21 +143,7 @@ def execute(
             args += module_args
         args += updated_src
         helpers.log(args)
-        result = subprocess.run(args, text=True, capture_output=True)
-
-        if not result.returncode == 0:
-            opened = True
-            with open(config.errors, "a") as err_file:
-                err_file.writelines(
-                    [bar, helpers.time() + "\n", result.stderr, bar + "\n"]
-                )
-            helpers.log(
-                f"Occurred during compilation, check {os.path.abspath(config.errors)} for info.",
-                type="ERROR",
-                colour="red",
-            )
-            os.remove(config.class_hash)
-            return
+        subprocess.run(args)
 
     if updated_res:
         for res in updated_res:
@@ -181,23 +165,11 @@ def execute(
         args += module_args
     args.append(config.entry)
     helpers.log(args)
-    result = subprocess.run(args)
-
-    if not result.returncode == 0:
-        with open(config.errors, "a") as err_file:
-            if not opened:
-                err_file.writelines([bar, helpers.time() + "\n"])
-                opened = True
-            err_file.writelines([result.stderr, bar + "\n"])
-        helpers.log(
-            f"Occurred during execution, check {os.path.abspath(config.errors)} for info.",
-            type="ERROR",
-            colour="red",
-        )
+    subprocess.run(args)
 
 
 @click.command()
-@click.version_option("1.6.2")
+@click.version_option("1.6.4")
 # The config options have no default so that their value will be None if they are
 # not passed in the command line. This is done so that Config.adjust() will when
 # it should or shouldn't overrdide file options

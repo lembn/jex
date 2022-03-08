@@ -92,7 +92,6 @@ class Config:
         self.meta = helpers.join(self.build, Config.JEX)
         self.class_hash = helpers.join(self.meta, "classes.json")
         self.res_hash = helpers.join(self.meta, "resources.json")
-        self.errors = helpers.join(self.meta, "errors.txt")
 
     def transform(self, path: str, src_to_build: bool) -> str:
         current_ext, target_ext = (
